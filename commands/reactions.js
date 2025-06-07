@@ -3,7 +3,8 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const reactionVideos = {
+// Map of emotion commands and their corresponding MP4 video URLs
+const emotionCommands = {
   kiss: 'https://media.tenor.com/4j4UT0-4xTMAAAPo/peach-and-goma.mp4',
   slap: 'https://media.tenor.com/b7lPcGXxKpsAAAPo/shut-up-stfu.mp4',
   angry: 'https://media.tenor.com/_xFEbRDYBWsAAAPo/angry-mad.mp4',
@@ -21,60 +22,49 @@ const reactionVideos = {
   happy: 'https://media.tenor.com/vlXSbBQHesoAAAPo/sanjay-sanjay-chat.mp4',
 };
 
-const mediaFolder = path.join(__dirname, '..', 'media');
-
-async function downloadVideoIfNotExists(command) {
-  const filePath = path.join(mediaFolder, `${command}.mp4`);
-  if (fs.existsSync(filePath)) {
-    // File exists already
-    return filePath;
-  }
-
-  const url = reactionVideos[command];
-  if (!url) throw new Error('No video URL found for command ' + command);
-
-  console.log(`Downloading ${command} video...`);
-
-  try {
-    const response = await axios.get(url, { responseType: 'stream' });
-    const writer = fs.createWriteStream(filePath);
-    response.data.pipe(writer);
-
-    return new Promise((resolve, reject) => {
-      writer.on('finish', () => {
-        console.log(`${command} video downloaded!`);
-        resolve(filePath);
-      });
-      writer.on('error', reject);
-    });
-  } catch (error) {
-    throw new Error('Failed to download video: ' + error.message);
-  }
+// Directory to cache videos after downloading (optional but recommended)
+const cacheDir = path.join(__dirname, '..', 'media', 'reactions');
+if (!fs.existsSync(cacheDir)) {
+  fs.mkdirSync(cacheDir, { recursive: true });
 }
 
-async function handleReactionCommand(message, command) {
+async function downloadVideoIfNotExists(command) {
+  const videoUrl = emotionCommands[command];
+  if (!videoUrl) throw new Error(`No video URL found for command: ${command}`);
+
+  const filePath = path.join(cacheDir, `${command}.mp4`);
+  if (fs.existsSync(filePath)) return filePath;
+
+  const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
+  fs.writeFileSync(filePath, response.data);
+  return filePath;
+}
+
+async function handleEmotionCommand(message, command) {
   try {
     const filePath = await downloadVideoIfNotExists(command);
     const media = MessageMedia.fromFilePath(filePath);
 
     const mentions = await message.getMentions();
-    const senderName = message._data.notifyName || 'Someone';
-    const targetName = mentions.length > 0 ? `@${mentions[0].id.user}` : 'themselves';
+    const mentionIds = mentions.map(c => c.id._serialized);
 
+    // Get sender name more safely
+    const senderName = message._data?.notifyName || message.author || 'Someone';
+    const targetName = mentions.length > 0 ? `@${mentions[0].id.user}` : 'themselves';
     const caption = `*${senderName}* ${command}ed *${targetName}* 🎬`;
 
-    await message.reply(media, undefined, { caption, mentions });
+    // Send video with caption and mention IDs array (strings)
+    await message.reply(media, undefined, { caption, mentions: mentionIds });
 
   } catch (err) {
-    console.error(`Failed to send .${command} reaction:`, err.message);
+    console.error(`❌ Failed to send .${command} reaction:`, err.message);
     await message.reply(`❌ Could not send *.${command}* reaction.`);
   }
 }
 
 module.exports = {
-  reactionVideos,
-  handleReactionCommand,
+  emotionCommands,
+  handleEmotionCommand
 };
-
 
 
