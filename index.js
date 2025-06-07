@@ -25,10 +25,17 @@ client.on('message', message => {
     if (text === '.ping') {
         message.reply('Pong!');
     }
-
-    else if (text === '.menu') {
-        sendMenu(client, message);
+else if (text === '.menu') {
+    try {
+        const gif = MessageMedia.fromFilePath('./media/menu.gif'); // Path to your Luffy GIF
+        await message.reply(gif);         // Send the animated GIF first
+        await message.reply(menuText);    // Then send the menu text
+    } catch (err) {
+        console.error('Error sending menu:', err);
+        message.reply('Could not send menu.');
     }
+}
+  
 });
 
 // Start the bot
