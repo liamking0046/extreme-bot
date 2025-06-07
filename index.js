@@ -1,6 +1,6 @@
-const { sendMenu } = require('./menu');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const { menuText } = require('./menu'); // Make sure you export menuText from menu.js
 
 // Initialize client
 const client = new Client({
@@ -19,24 +19,24 @@ client.on('ready', () => {
 });
 
 // Respond to messages
-client.on('message', message => {
+client.on('message', async message => {      // <-- make async here
     const text = message.body.toLowerCase();
 
     if (text === '.ping') {
         message.reply('Pong!');
     }
-else if (text === '.menu') {
-    try {
-        const gif = MessageMedia.fromFilePath('./media/menu.gif'); // Path to your Luffy GIF
-        await message.reply(gif);         // Send the animated GIF first
-        await message.reply(menuText);    // Then send the menu text
-    } catch (err) {
-        console.error('Error sending menu:', err);
-        message.reply('Could not send menu.');
+    else if (text === '.menu') {
+        try {
+            const gif = MessageMedia.fromFilePath('./media/menu.gif'); // Path to your Luffy GIF
+            await message.reply(gif);         // Send the animated GIF first
+            await message.reply(menuText);    // Then send the menu text
+        } catch (err) {
+            console.error('Error sending menu:', err);
+            message.reply('Could not send menu.');
+        }
     }
-}
-  
 });
 
 // Start the bot
 client.initialize();
+
