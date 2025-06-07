@@ -1,7 +1,7 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
 
-// Map of emotion commands and their corresponding MP4 video URLs
+// Emotion command to MP4 video links
 const reactionVideos = {
   kiss: 'https://media.tenor.com/4j4UT0-4xTMAAAPo/peach-and-goma.mp4',
   slap: 'https://media.tenor.com/b7lPcGXxKpsAAAPo/shut-up-stfu.mp4',
@@ -20,28 +20,32 @@ const reactionVideos = {
   happy: 'https://media.tenor.com/vlXSbBQHesoAAAPo/sanjay-sanjay-chat.mp4',
 };
 
-async function handleReactionCommand(message, command) {
+async function handleReaction(message, command) {
   const videoUrl = reactionVideos[command];
   if (!videoUrl) return;
 
   try {
     const senderName = message._data?.notifyName || 'Someone';
     const mentions = await message.getMentions();
-    const targetName = mentions.length > 0 ? `@${mentions[0].id.user}` : 'themselves';
-    const caption = `*${senderName}* ${command}ed *${targetName}* 🖤`;
+    const target = mentions.length > 0 ? `@${mentions[0].id.user}` : 'themselves';
+    const caption = `*${senderName}* ${command}ed *${target}* 🎬`;
 
     const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-    const media = new MessageMedia('video/mp4', Buffer.from(response.data).toString('base64'), `${command}.mp4`);
+
+    const media = new MessageMedia(
+      'video/mp4',
+      Buffer.from(response.data).toString('base64'),
+      `${command}.mp4`
+    );
 
     await message.reply(media, undefined, { caption });
+
   } catch (err) {
     console.error(`❌ Failed to send .${command} reaction:`, err.message);
     await message.reply(`❌ Could not send *.${command}* reaction.`);
   }
 }
 
-module.exports = {
-  reactionVideos,
-  handleReactionCommand
-};
+module.exports = { handleReaction, reactionVideos };
+
 
