@@ -1,65 +1,113 @@
 // menu.js
+// menu.js
 const menuText = `
-╔══✪〘 LIAM BOT MENU 〙✪══
-║
-║ 👑 Owner: Liam Arendsen
-║ 📞 Contact: 0833098338
-║ 🖼️ Wallpaper: https://wallpaperaccess.com/full/842245.jpg
-║
-╠═════════════
-║ 🎭 EMOTIONS
-╠═════════════
-║ 1. .kiss    - Send a kiss 💋
-║ 2. .slap    - Slap someone 👋
-║ 3. .angry   - Show anger 😠
-║ 4. .pinch   - Pinch someone 🤏
-║ 5. .laugh   - Laugh out loud 😂
-║ 6. .hug     - Send a hug 🤗
-║
-╠═════════════
-║ 🎮 GAMES
-╠═════════════
-║ 7. .gtn        - Guess the Number 🎲
-║ 8. .dice       - Roll a Dice 🎲
-║ 9. .rps        - Rock Paper Scissors ✂️
-║ 10. .flipcoin  - Flip a Coin 🪙
-║ 11. .tictactoe - Play Tic Tac Toe ❌⭕
-║ 12. .hangman   - Hangman Word Guess 🪦
-║ 13. .memory    - Memory Card Game 🧠
-║ 14. .trivia    - Trivia Quiz 🧩
-║
-╠═════════════
-║ ⚽ FIFA CARDS
-╠═════════════
-║ 15. .mycards  - Your collection 🃏
-║ 16. .coins    - Check coins 💰
-║ 17. .buy     - Buy a card 🛒
-║ 18. .sell    - Sell a card 💸
-║ 19. .cards   - List all cards 📋
-║
-╠═════════════
-║ 🧰 TOOLS
-╠═════════════
-║ 20. .ytmp3 <url>       - YouTube MP3 downloader 🎵
-║ 21. .add <num>         - Add user to group ➕
-║ 22. .kick <num>        - Kick user from group 👢
-║ 23. .remove <num>      - Remove user from group 🚫
-║ 24. .promote <num>     - Promote to admin 🔰
-║ 25. .demote <num>      - Demote admin ⚠️
-║ 26. .mute <time>       - Mute group for time ⏲️
-║ 27. .unmute            - Unmute group 🔊
-║ 28. .warn <num>        - Warn user ⚠️
-║ 29. .warnings <num>    - Check warnings 📄
-║ 30. .resetwarn <num>   - Reset warnings 🔄
-║ 31. .antilink on/off   - Anti-link protection 🚫
-║ 32. .antispam on/off   - Spam filter toggle 🚨
-║ 33. .antiswear on/off  - Swear word filter 🚫💬
-║ 34. .profile           - View your profile 👤
-╚═════════════
+┏━━━━━━━━━━━━━━━━━━━━━┓
+┃        ⚫ LIAM BOT ⚫        
+┃━━━━━━━━━━━━━━━━━━━━━┃
+┃ 👑 Owner   : Liam Arendsen
+┃ 📞 Contact : 0833098338
+┗━━━━━━━━━━━━━━━━━━━━━┛
+
+🎰 Casino Games (Skill + Chance):
+• .slot                 ➜ Spin reels, match combos & win coins
+• .blackjack            ➜ Play 21 against the bot (hit/stand/double)
+• .roulette [bet]       ➜ Bet numbers/colors, wheel spins, win coins
+• .dice [guess]         ➜ Guess dice roll (odd/even/range)
+• .coinflip [heads/tails]➜ Flip coin, double or lose coins
+• .jackpot [bet]        ➜ Pool bets, guess to boost chance, win big
+• .scratchcard          ➜ Pick cards, match pairs, win coins
+
+💖 Fun / Emotions:
+• .kiss        • .slap
+• .hug         • .laugh
+• .angry       • .pinch
+• .sad         • .cry
+• .pat         • .poke
+• .cuddle      • .bite
+• .blush       • .dance
+• .highfive    • .smile
+
+⚽ FIFA Card Shop:
+• .mycards     • .buy
+• .sell        • .coins
+• .cards       • .market
+• .trade @user • .cardinfo [name]
+
+🛠️ Admin Tools:
+• .add @user             ➜ Add user to group
+• .kick @user            ➜ Remove user from group
+• .promote @user         ➜ Make user admin
+• .demote @user          ➜ Remove admin rights
+• .warn @user            ➜ Give warning
+• .resetwarn @user       ➜ Reset warnings
+• .delete                ➜ Delete bot's message
+• .antilink on/off       ➜ Block group links
+• .antispam on/off       ➜ Delete spam
+• .antitoxic on/off      ➜ Censor swearing
+• .lockgroup on/off      ➜ Lock messaging
+• .setdesc [text]        ➜ Set group description
+• .setname [name]        ➜ Change group name
+• .tagall                ➜ Mention everyone
+• .rules [text]          ➜ Set/view rules
+
+📹 Media / Tools:
+• .ytmp3 [url]           ➜ YouTube audio
+• .ytmp4 [url]           ➜ YouTube video
+• .sticker               ➜ Img/video to sticker
+• .toimg                 ➜ Sticker to image
+• .img [prompt]          ➜ AI image generator
+• .quote [text]          ➜ Create quote image
+• .ocr                   ➜ Text from image
+• .translate [text]      ➜ Translate text
+• .weather [location]    ➜ Get weather info
+• .wiki [query]          ➜ Wikipedia summary
+• .barcode [text]        ➜ Generate barcode
+• .qrcode [text/url]     ➜ Generate QR code
+• .lyrics [song name]    ➜ Get song lyrics
+
+🤣 Meme & Funny Videos:
+• .meme                 ➜ Send a random meme
+• .joke                 ➜ Send a funny joke
+• .funnyvideo           ➜ Send a random funny video
+• .catvid               ➜ Cute cat videos
+• .dogvid               ➜ Cute dog videos
+• .whatanime            ➜ Guess anime from pics
+
+🎵 Music:
+• .play [song]           ➜ Play a song from YouTube
+• .pause                 ➜ Pause current song
+• .resume                ➜ Resume paused song
+• .skip                  ➜ Skip current song
+• .queue                 ➜ Show song queue
+• .np                    ➜ Now playing info
+
+📺 Streamer:
+• .twitch [channel]      ➜ Get Twitch channel info
+• .ytchannel [name]      ➜ YouTube channel info
+• .livestream [platform] ➜ Get livestream status
+• .streamers             ➜ List popular streamers
+
+📊 Leaderboard:
+• .leaderboard           ➜ See top coin holders
+
+📎 Misc / Utilities:
+• .profile               ➜ View your stats
+• .ping                  ➜ Check bot status
+• .menu                  ➜ Show this menu
+• .help                  ➜ Help guide
+• .owner                 ➜ Show bot owner
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🔹 Powered by Liam Bot
+━━━━━━━━━━━━━━━━━━━━━━━
 `;
 
+const luffyGif = 'https://media.giphy.com/media/MaJS2BMfGk6Hm/giphy.gif'; // Dark Luffy GIF
+
 function sendMenu(client, message) {
-    message.reply(menuText);
+    client.sendMessage(message.from, luffyGif, {
+        caption: menuText
+    });
 }
 
 module.exports = { sendMenu };
