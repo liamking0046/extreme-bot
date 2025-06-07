@@ -1,47 +1,47 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { menuText } = require('./menu');
-const { handleEmotionCommand, emotionCommands } = require('./commands/reactions'); // ✅ Updated path and imports
+const { handleEmotionCommand, emotionCommands } = require('./commands/reactions'); // ✅ Import reactions
 
 // Initialize client
 const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-// Show QR code in terminal
+// Show QR code
 client.on('qr', qr => {
     console.log('Scan this QR code with WhatsApp:');
     qrcode.generate(qr, { small: true });
 });
 
-// On successful connection
+// Bot is ready
 client.on('ready', () => {
     console.log('✅ Bot is ready and connected!');
 });
 
-// Respond to messages
+// Handle incoming messages
 client.on('message', async message => {
     const text = message.body.toLowerCase();
 
-    // Ping command
+    // 1. Ping
     if (text === '.ping') {
-        return message.reply('Pong!');
+        return message.reply('🏓 Pong!');
     }
 
-    // Menu command
+    // 2. Menu (send GIF first, then text)
     if (text === '.menu') {
         try {
-            const gif = MessageMedia.fromFilePath('./media/menu.gif'); // ✅ Make sure this GIF exists
+            const gif = MessageMedia.fromFilePath('./media/menu.gif'); // Make sure this exists and is a real .gif
             await message.reply(gif);
             await message.reply(menuText);
         } catch (err) {
-            console.error('Error sending menu:', err);
+            console.error('❌ Error sending menu:', err);
             return message.reply('❌ Could not send menu.');
         }
         return;
     }
 
-    // Emotion Reaction Commands
+    // 3. Emotion reactions (.kiss, .slap, etc.)
     if (text.startsWith('.')) {
         const command = text.slice(1).split(' ')[0];
         if (emotionCommands[command]) {
@@ -55,8 +55,9 @@ client.on('message', async message => {
     }
 });
 
-// Start the bot
+// Start bot
 client.initialize();
+
 
 
 
