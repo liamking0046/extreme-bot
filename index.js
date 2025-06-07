@@ -1,7 +1,7 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { menuText } = require('./menu');
-const { handleReaction, availableReactions } = require('./reactions'); // ⬅️ Add this line
+const { handleEmotionCommand, emotionCommands } = require('./commands/reactions'); // ✅ Updated path and imports
 
 // Initialize client
 const client = new Client({
@@ -25,30 +25,31 @@ client.on('message', async message => {
 
     // Ping command
     if (text === '.ping') {
-        message.reply('Pong!');
+        return message.reply('Pong!');
     }
 
     // Menu command
-    else if (text === '.menu') {
+    if (text === '.menu') {
         try {
-            const gif = MessageMedia.fromFilePath('./media/menu.gif'); // Path to your menu GIF
+            const gif = MessageMedia.fromFilePath('./media/menu.gif'); // ✅ Make sure this GIF exists
             await message.reply(gif);
             await message.reply(menuText);
         } catch (err) {
             console.error('Error sending menu:', err);
-            message.reply('Could not send menu.');
+            return message.reply('❌ Could not send menu.');
         }
+        return;
     }
 
-    // Emotion Reactions (e.g. .slap, .kiss)
-    else if (text.startsWith('.')) {
-        const cmd = text.slice(1).split(' ')[0]; // get the command after "."
-        if (availableReactions.includes(cmd)) {
+    // Emotion Reaction Commands
+    if (text.startsWith('.')) {
+        const command = text.slice(1).split(' ')[0];
+        if (emotionCommands[command]) {
             try {
-                await handleReaction(client, message, cmd);
+                await handleEmotionCommand(message, command);
             } catch (err) {
-                console.error(`Error handling ${cmd}:`, err);
-                message.reply('Something went wrong with the reaction.');
+                console.error(`❌ Error handling .${command}:`, err);
+                return message.reply('Something went wrong with the reaction.');
             }
         }
     }
@@ -56,5 +57,6 @@ client.on('message', async message => {
 
 // Start the bot
 client.initialize();
+
 
 
