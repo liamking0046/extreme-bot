@@ -1,9 +1,7 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 
-// Map of emotion commands and their corresponding MP4 video URLs
+// Emotion command-to-video map (Tenor direct .mp4 links)
 const emotionCommands = {
   kiss: 'https://media.tenor.com/4j4UT0-4xTMAAAPo/peach-and-goma.mp4',
   slap: 'https://media.tenor.com/b7lPcGXxKpsAAAPo/shut-up-stfu.mp4',
@@ -22,39 +20,27 @@ const emotionCommands = {
   happy: 'https://media.tenor.com/vlXSbBQHesoAAAPo/sanjay-sanjay-chat.mp4',
 };
 
-// Directory to cache videos after downloading (optional but recommended)
-const cacheDir = path.join(__dirname, '..', 'media', 'reactions');
-if (!fs.existsSync(cacheDir)) {
-  fs.mkdirSync(cacheDir, { recursive: true });
-}
-
-async function downloadVideoIfNotExists(command) {
-  const videoUrl = emotionCommands[command];
-  if (!videoUrl) throw new Error(`No video URL found for command: ${command}`);
-
-  const filePath = path.join(cacheDir, `${command}.mp4`);
-  if (fs.existsSync(filePath)) return filePath;
-
-  const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-  fs.writeFileSync(filePath, response.data);
-  return filePath;
-}
-
 async function handleEmotionCommand(message, command) {
+  const videoUrl = emotionCommands[command];
+  if (!videoUrl) return;
+
   try {
-    const filePath = await downloadVideoIfNotExists(command);
-    const media = MessageMedia.fromFilePath(filePath);
-
     const mentions = await message.getMentions();
-    const mentionIds = mentions.map(c => c.id._serialized);
-
-    // Get sender name more safely
-    const senderName = message._data?.notifyName || message.author || 'Someone';
+    const senderName = message._data?.notifyName || 'Someone';
     const targetName = mentions.length > 0 ? `@${mentions[0].id.user}` : 'themselves';
     const caption = `*${senderName}* ${command}ed *${targetName}* 🎬`;
 
-    // Send video with caption and mention IDs array (strings)
-    await message.reply(media, undefined, { caption, mentions: mentionIds });
+    // Download video as base64
+    const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
+
+    const media = new MessageMedia(
+      'video/mp4',
+      Buffer.from(response.data).toString('base64'),
+      `${command}.mp4`
+    );
+
+    // Send media without mentions (deprecated format removed)
+    await message.reply(media, undefined, { caption });
 
   } catch (err) {
     console.error(`❌ Failed to send .${command} reaction:`, err.message);
