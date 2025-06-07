@@ -101,12 +101,19 @@ const menuText = `
 ━━━━━━━━━━━━━━━━━━━━━━━
 `;
 
-const luffyGif = 'https://media.giphy.com/media/MaJS2BMfGk6Hm/giphy.gif'; // Dark Luffy GIF
-
-function sendMenu(client, message) {
-    client.sendMessage(message.from, luffyGif, {
-        caption: menuText
+async function sendMenu(client, message) {
+  try {
+    // Send Luffy GIF as video message (animated)
+    await client.sendMessage(message.from, {
+      video: { url: 'https://media.giphy.com/media/MaJS2BMfGk6Hm/giphy.gif' },
+      gifPlayback: true,
     });
+
+    // Send menu text separately
+    await client.sendMessage(message.from, menuText);
+  } catch (error) {
+    console.error('Error sending menu:', error);
+  }
 }
 
 module.exports = { sendMenu };
