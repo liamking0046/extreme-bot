@@ -1,5 +1,4 @@
 // menu.js
-// menu.js
 const menuText = `
 ┏━━━━━━━━━━━━━━━━━━━━━┓
 ┃        ⚫ LIAM BOT ⚫        
