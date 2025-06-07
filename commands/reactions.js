@@ -1,7 +1,7 @@
 const { MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
 
-// Map of emotion commands and their corresponding GIF URLs
+// Command to GIF mappings
 const emotionCommands = {
   kiss: 'https://media.tenor.com/Wx9I2k8u5NIAAAAM/anime-kiss.gif',
   slap: 'https://media1.tenor.com/m/mxzgfeabiiwaaaad/taiga-toradora.gif',
@@ -24,22 +24,28 @@ async function handleEmotionCommand(message, command) {
   const gifUrl = emotionCommands[command];
   if (!gifUrl) return;
 
-  // Try to get the quoted or tagged user
-  const mentions = await message.getMentions();
-  const sender = message._data.notifyName || 'Someone';
-
-  const targetName = mentions.length > 0
-    ? `@${mentions[0].id.user}`
-    : 'themselves';
-
-  const caption = `*${sender}* ${command}ed *${targetName}* 🖤`;
-
   try {
-    const response = await axios.get(gifUrl, { responseType: 'arraybuffer' });
-    const media = new MessageMedia('image/gif', response.data.toString('base64'));
+    const mentions = await message.getMentions();
+    const sender = message._data.notifyName || 'Someone';
+    const targetName = mentions.length > 0
+      ? `@${mentions[0].id.user}`
+      : 'themselves';
+
+    const caption = `*${sender}* ${command}ed *${targetName}* 🖤`;
+
+    const response = await axios.get(gifUrl, {
+      responseType: 'arraybuffer'
+    });
+
+    const media = new MessageMedia(
+      'image/gif',
+      Buffer.from(response.data).toString('base64'),
+      `${command}.gif`
+    );
+
     await message.reply(media, undefined, { caption, mentions });
   } catch (err) {
-    console.error(`Error fetching or sending ${command} gif:`, err);
+    console.error(`❌ Failed to send .${command} reaction:`, err.message);
     await message.reply(`❌ Could not send *.${command}* reaction.`);
   }
 }
@@ -48,3 +54,4 @@ module.exports = {
   emotionCommands,
   handleEmotionCommand
 };
+
