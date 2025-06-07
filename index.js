@@ -20,8 +20,14 @@ client.on('ready', () => {
 
 // Respond to messages
 client.on('message', message => {
-    if (message.body === '.ping') {
+    const text = message.body.toLowerCase();
+
+    if (text === '.ping') {
         message.reply('Pong!');
+    }
+
+    else if (text === '.menu') {
+        sendMenu(client, message);
     }
 });
 
