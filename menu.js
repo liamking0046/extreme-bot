@@ -4,7 +4,7 @@ const menuText = `
 ┃        ⚫ LIAM BOT ⚫        
 ┃━━━━━━━━━━━━━━━━━━━━━┃
 ┃ 👑 Owner   : Liam Arendsen
-┃ 📞 Contact : 0833098338
+┃ 📞 Contact : wa.me/+27833098338
 ┗━━━━━━━━━━━━━━━━━━━━━┛
 
 🎰 Casino Games (Skill + Chance):
