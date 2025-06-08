@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const tenorApiKey = 'YOUR_TENOR_API_KEY';
+const tenorApiKey = 'AIzaSyC8xhONkfUt3WRkk3Dxi6vLly4PyMXBVOA';
 const tenorBaseUrl = 'https://tenor.googleapis.com/v2/search';
 
 const reactionCommands = [
