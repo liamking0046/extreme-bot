@@ -1,51 +1,26 @@
-const { MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
 
-// Emotion command to MP4 video links
-const reactionVideos = {
-  kiss: 'https://media.tenor.com/4j4UT0-4xTMAAAPo/peach-and-goma.mp4',
-  slap: 'https://media.tenor.com/b7lPcGXxKpsAAAPo/shut-up-stfu.mp4',
-  angry: 'https://media.tenor.com/_xFEbRDYBWsAAAPo/angry-mad.mp4',
-  pinch: 'https://media.tenor.com/4iycqp-7mLEAAAPo/pinch-pinch-cheeks.mp4',
-  cry: 'https://media.tenor.com/Ocs_P_9emxoAAAPo/girls%27-last-tour-shoujo-shuumatsu-ryokou.mp4',
-  hug: 'https://media.tenor.com/oZtU0xcJCdMAAAPo/i-love-you-love-you.mp4',
-  bite: 'https://media.tenor.com/0I_7w_12F4cAAAPo/bite-shoulder.mp4',
-  blush: 'https://media.tenor.com/04MHPTs8JYsAAAPo/blush-anime-embarrassing.mp4',
-  punch: 'https://media.tenor.com/vQOnKgNwH2kAAAPo/peter-griffin-punch.mp4',
-  dance: 'https://media.tenor.com/be0RW1YG7hEAAAPo/6-months-happy-dance.mp4',
-  run: 'https://media.tenor.com/-T29lwTa3esAAAPo/moment-comming.mp4',
-  facepalm: 'https://media.tenor.com/WxufwY6cQV0AAAPo/facepalm.mp4',
-  laugh: 'https://media.tenor.com/keerZWzdwQsAAAPo/laurajs34567.mp4',
-  clap: 'https://media.tenor.com/f3_kfNdFAb0AAAPo/leonardo-dicaprio-clapping.mp4',
-  happy: 'https://media.tenor.com/vlXSbBQHesoAAAPo/sanjay-sanjay-chat.mp4',
+const reactions = ['kiss', 'slap', 'hug', 'angry', 'cry', 'punch', 'bite', 'blush', 'dance', 'run', 'facepalm', 'laugh', 'clap', 'happy'];
+
+module.exports = async (client, msg) => {
+    const text = msg.body.trim().toLowerCase().split(" ")[0].replace(".", "");
+    if (!reactions.includes(text)) return;
+
+    try {
+        const res = await axios.get(`https://tenor.googleapis.com/v2/search`, {
+            params: {
+                q: text,
+                key: process.env.TENOR_API_KEY,
+                limit: 1,
+                media_filter: 'minimal'
+            }
+        });
+
+        const videoUrl = res.data.results[0].media_formats.mp4.url;
+
+        await client.sendMessage(msg.from, videoUrl, { caption: `💫 Reaction: ${text}` });
+    } catch (err) {
+        console.error(`Error fetching ${text} GIF:`, err.message);
+        msg.reply(`❌ Couldn't get a "${text}" reaction.`);
+    }
 };
-
-async function handleReaction(message, command) {
-  const videoUrl = reactionVideos[command];
-  if (!videoUrl) return;
-
-  try {
-    const senderName = message._data?.notifyName || 'Someone';
-    const mentions = await message.getMentions();
-    const target = mentions.length > 0 ? `@${mentions[0].id.user}` : 'themselves';
-    const caption = `*${senderName}* ${command}ed *${target}* 🎬`;
-
-    const response = await axios.get(videoUrl, { responseType: 'arraybuffer' });
-
-    const media = new MessageMedia(
-      'video/mp4',
-      Buffer.from(response.data).toString('base64'),
-      `${command}.mp4`
-    );
-
-    await message.reply(media, undefined, { caption });
-
-  } catch (err) {
-    console.error(`❌ Failed to send .${command} reaction:`, err.message);
-    await message.reply(`❌ Could not send *.${command}* reaction.`);
-  }
-}
-
-module.exports = { handleReaction, reactionVideos };
-
-
