@@ -1,58 +1,59 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
+const { MessageMedia } = require('whatsapp-web.js');
 
 const tenorApiKey = 'AIzaSyC8xhONkfUt3WRkk3Dxi6vLly4PyMXBVOA';
-const tenorBaseUrl = 'https://tenor.googleapis.com/v2/search';
 
-const reactionCommands = [
+const reactions = [
   'kiss', 'slap', 'angry', 'pinch', 'cry', 'hug', 'bite',
   'blush', 'punch', 'dance', 'run', 'facepalm', 'laugh', 'clap', 'happy'
 ];
 
-module.exports = async function handleReactionCommand(command, message, client) {
-  const mentionedUsers = message.mentionedIds;
-  const senderContact = await message.getContact();
-
-  if (!reactionCommands.includes(command)) return;
-
-  if (mentionedUsers.length === 0) {
-    return message.reply(`Please mention someone to ${command}.`);
-  }
-
-  const targetUser = mentionedUsers[0];
-  const senderName = senderContact.pushname || senderContact.number;
-
-  // Search Tenor with random result using 'random=true'
-  const url = `${tenorBaseUrl}?q=${command}&key=${tenorApiKey}&limit=10&random=true&media_filter=minimal`;
-
+async function getTenorGif(reaction) {
+  const url = `https://tenor.googleapis.com/v2/search?q=anime+${reaction}&key=${tenorApiKey}&limit=10&media_filter=gif`;
   try {
-    const res = await fetch(url);
-    const data = await res.json();
-    const gifResults = data.results;
-
-    if (!gifResults || gifResults.length === 0) {
-      return message.reply(`Sorry, couldn't find a GIF for ${command}.`);
+    const res = await axios.get(url);
+    const gifs = res.data.results;
+    if (gifs.length > 0) {
+      const random = gifs[Math.floor(Math.random() * gifs.length)];
+      return random.media_formats.gif.url;
+    } else {
+      return null;
     }
-
-    // Pick a random gif from the list
-    const randomGif = gifResults[Math.floor(Math.random() * gifResults.length)];
-    const gifUrl = randomGif.media_formats.gif.url;
-
-    const taggedUser = `@${targetUser.replace(/@c\.us$/, '')}`;
-    const senderTag = `@${senderContact.number}`;
-
-    await message.reply(`${senderTag} ${command}ed ${taggedUser}`, {
-      mentions: [targetUser, senderContact.id._serialized]
-    });
-
-    // Delay sending the GIF
-    setTimeout(() => {
-      client.sendMessage(message.from, gifUrl, {
-        mentions: [targetUser, senderContact.id._serialized],
-        caption: `${senderName} ${command}ed ${taggedUser}`
-      });
-    }, 1500);
   } catch (err) {
-    console.error(`Error in .${command}:`, err);
-    message.reply(`Failed to send .${command} reaction.`);
+    console.error(`Error fetching Tenor GIF for ${reaction}:`, err);
+    return null;
   }
-};
+}
+
+async function handleReactionCommand(command, message) {
+  if (!reactions.includes(command)) return;
+
+  const chat = await message.getChat();
+  const sender = message.author || message.from;
+
+  let mentions = [];
+  if (message.hasQuotedMsg) {
+    const quotedMsg = await message.getQuotedMessage();
+    mentions = [quotedMsg.author || quotedMsg.from];
+  } else if (message.mentionedIds.length > 0) {
+    mentions = message.mentionedIds;
+  } else {
+    mentions = [sender];
+  }
+
+  const mentionText = `@${sender.split('@')[0]} ${command}s @${mentions[0].split('@')[0]}`;
+
+  await message.reply(mentionText, undefined, { mentions: [sender, ...mentions] });
+
+  setTimeout(async () => {
+    const gifUrl = await getTenorGif(command);
+    if (gifUrl) {
+      const media = await MessageMedia.fromUrl(gifUrl);
+      await message.reply(media);
+    } else {
+      await message.reply('⚠️ Failed to fetch a GIF for this reaction.');
+    }
+  }, 1500);
+}
+
+module.exports = { handleReactionCommand };
