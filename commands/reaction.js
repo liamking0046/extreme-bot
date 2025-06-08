@@ -1,26 +1,38 @@
+const { TENOR_API_KEY } = require('../config');
 const axios = require('axios');
 
-const reactions = ['kiss', 'slap', 'hug', 'angry', 'cry', 'punch', 'bite', 'blush', 'dance', 'run', 'facepalm', 'laugh', 'clap', 'happy'];
+const reactions = [
+  'kiss', 'slap', 'angry', 'pinch', 'cry', 'hug', 'bite',
+  'blush', 'punch', 'dance', 'run', 'facepalm', 'laugh', 'clap', 'happy'
+];
 
-module.exports = async (client, msg) => {
-    const text = msg.body.trim().toLowerCase().split(" ")[0].replace(".", "");
-    if (!reactions.includes(text)) return;
+async function fetchGifUrl(keyword) {
+  const res = await axios.get(`https://tenor.googleapis.com/v2/search?q=${keyword}&key=${TENOR_API_KEY}&limit=1&media_filter=gif`);
+  const gif = res.data.results[0]?.media_formats?.gif?.url;
+  return gif;
+}
 
-    try {
-        const res = await axios.get(`https://tenor.googleapis.com/v2/search`, {
-            params: {
-                q: text,
-                key: process.env.TENOR_API_KEY,
-                limit: 1,
-                media_filter: 'minimal'
-            }
-        });
+async function handleReactionCommand(command, msg, client) {
+  if (!reactions.includes(command)) return;
 
-        const videoUrl = res.data.results[0].media_formats.mp4.url;
+  const sender = msg._data.notifyName || msg.from;
+  const mentions = msg.mentionedIds?.length
+    ? msg.mentionedIds.map(id => `@${id.split('@')[0]}`).join(' ')
+    : '@everyone';
 
-        await client.sendMessage(msg.from, videoUrl, { caption: `💫 Reaction: ${text}` });
-    } catch (err) {
-        console.error(`Error fetching ${text} GIF:`, err.message);
-        msg.reply(`❌ Couldn't get a "${text}" reaction.`);
-    }
-};
+  try {
+    const gifUrl = await fetchGifUrl(command);
+    if (!gifUrl) return msg.reply('❌ Could not find a matching GIF.');
+
+    await client.sendMessage(msg.from, `${sender} ${command}s ${mentions}`, {
+      mentions: msg.mentionedIds,
+    });
+
+    await client.sendMessage(msg.from, gifUrl, { caption: `*${command.toUpperCase()}!*`, sendVideoAsGif: true });
+  } catch (error) {
+    console.error(`Failed to send ${command} reaction:`, error.message);
+    msg.reply('❌ Error sending reaction.');
+  }
+}
+
+module.exports = { handleReactionCommand };
