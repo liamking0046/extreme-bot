@@ -1,38 +1,58 @@
-const { TENOR_API_KEY } = require('../config');
-const axios = require('axios');
+const fetch = require('node-fetch');
 
-const reactions = [
+const tenorApiKey = 'YOUR_TENOR_API_KEY';
+const tenorBaseUrl = 'https://tenor.googleapis.com/v2/search';
+
+const reactionCommands = [
   'kiss', 'slap', 'angry', 'pinch', 'cry', 'hug', 'bite',
   'blush', 'punch', 'dance', 'run', 'facepalm', 'laugh', 'clap', 'happy'
 ];
 
-async function fetchGifUrl(keyword) {
-  const res = await axios.get(`https://tenor.googleapis.com/v2/search?q=${keyword}&key=${TENOR_API_KEY}&limit=1&media_filter=gif`);
-  const gif = res.data.results[0]?.media_formats?.gif?.url;
-  return gif;
-}
+module.exports = async function handleReactionCommand(command, message, client) {
+  const mentionedUsers = message.mentionedIds;
+  const senderContact = await message.getContact();
 
-async function handleReactionCommand(command, msg, client) {
-  if (!reactions.includes(command)) return;
+  if (!reactionCommands.includes(command)) return;
 
-  const sender = msg._data.notifyName || msg.from;
-  const mentions = msg.mentionedIds?.length
-    ? msg.mentionedIds.map(id => `@${id.split('@')[0]}`).join(' ')
-    : '@everyone';
+  if (mentionedUsers.length === 0) {
+    return message.reply(`Please mention someone to ${command}.`);
+  }
+
+  const targetUser = mentionedUsers[0];
+  const senderName = senderContact.pushname || senderContact.number;
+
+  // Search Tenor with random result using 'random=true'
+  const url = `${tenorBaseUrl}?q=${command}&key=${tenorApiKey}&limit=10&random=true&media_filter=minimal`;
 
   try {
-    const gifUrl = await fetchGifUrl(command);
-    if (!gifUrl) return msg.reply('❌ Could not find a matching GIF.');
+    const res = await fetch(url);
+    const data = await res.json();
+    const gifResults = data.results;
 
-    await client.sendMessage(msg.from, `${sender} ${command}s ${mentions}`, {
-      mentions: msg.mentionedIds,
+    if (!gifResults || gifResults.length === 0) {
+      return message.reply(`Sorry, couldn't find a GIF for ${command}.`);
+    }
+
+    // Pick a random gif from the list
+    const randomGif = gifResults[Math.floor(Math.random() * gifResults.length)];
+    const gifUrl = randomGif.media_formats.gif.url;
+
+    const taggedUser = `@${targetUser.replace(/@c\.us$/, '')}`;
+    const senderTag = `@${senderContact.number}`;
+
+    await message.reply(`${senderTag} ${command}ed ${taggedUser}`, {
+      mentions: [targetUser, senderContact.id._serialized]
     });
 
-    await client.sendMessage(msg.from, gifUrl, { caption: `*${command.toUpperCase()}!*`, sendVideoAsGif: true });
-  } catch (error) {
-    console.error(`Failed to send ${command} reaction:`, error.message);
-    msg.reply('❌ Error sending reaction.');
+    // Delay sending the GIF
+    setTimeout(() => {
+      client.sendMessage(message.from, gifUrl, {
+        mentions: [targetUser, senderContact.id._serialized],
+        caption: `${senderName} ${command}ed ${taggedUser}`
+      });
+    }, 1500);
+  } catch (err) {
+    console.error(`Error in .${command}:`, err);
+    message.reply(`Failed to send .${command} reaction.`);
   }
-}
-
-module.exports = { handleReactionCommand };
+};
