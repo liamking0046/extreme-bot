@@ -1,38 +1,58 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const { menuText } = require('./menu');
 const { handleReactionCommand } = require('./commands/reaction');
 
 const client = new Client({
   authStrategy: new LocalAuth(),
-  puppeteer: { headless: true }
+  puppeteer: {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu'
+    ]
+  }
 });
 
-client.on('qr', (qr) => {
-  console.log('Scan the QR below:');
+client.on('qr', qr => {
   qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
-  console.log('✅ Bot is ready!');
+  console.log('🤖 Bot is ready!');
 });
 
-client.on('message', async (msg) => {
-  const body = msg.body.toLowerCase();
+client.on('message', async msg => {
+  const chat = await msg.getChat();
+  const command = msg.body.toLowerCase();
 
-  // Basic Ping Command
-  if (body === '.ping') {
-    return msg.reply('🏓 Pong!');
+  // Simple ping command
+  if (command === '.ping') {
+    return msg.reply('🏓 Pong! I am alive.');
   }
 
-  // Menu Command
-  if (body === '.menu') {
-    const { menuText } = require('./menu');
-    return msg.reply(menuText);
+  // Menu command
+  if (command === '.menu') {
+    const luffyGif = await MessageMedia.fromUrl('https://media.tenor.com/KHM3aNkXaEwAAAAC/luffy-one-piece.gif');
+    await msg.reply(luffyGif, undefined, { sendMediaAsSticker: false });
+    return client.sendMessage(msg.from, menuText);
   }
 
-  // Reactions
-  const command = body.startsWith('.') ? body.slice(1).split(' ')[0] : '';
-  await handleReactionCommand(command, msg, client);
+  // Reaction commands
+  const reactionCommands = [
+    '.kiss', '.slap', '.angry', '.pinch', '.cry', '.hug', '.bite', '.blush', '.punch', '.dance',
+    '.run', '.facepalm', '.laugh', '.clap', '.happy'
+  ];
+
+  if (reactionCommands.includes(command.split(' ')[0])) {
+    await handleReactionCommand(msg, command);
+  }
 });
 
 client.initialize();
